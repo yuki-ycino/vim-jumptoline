@@ -165,7 +165,9 @@ function! s:callback_sub(line, bnr, fullpath, lnum, col) abort
             execute printf('%dbuffer', a:bnr)
         endif
     endif
-    call s:adjust_and_setpos(a:lnum, a:col)
+    if a:lnum != 0
+        call s:adjust_and_setpos(a:lnum, a:col)
+    endif
     normal! zz
 endfunction
 
@@ -223,13 +225,17 @@ function! s:find_thefile(target)
         for s in [fnamemodify(bufname(info['bufnr']), ':p:h'), getcwd(info['winnr'], info['tabnr'])]
             let xs = split(s, '[\/]')
             for n in reverse(range(0, len(xs) - 1))
-                let path = expand(a:target)
+                let splited = split(a:target, ':')
+                let filename = splited[0]
+                let linenum = splited[1:]
+
+                let path = expand(filename)
                 if filereadable(path)
-                    return [path]
+                    return [path . ':' . join(linenum, ':')]
                 endif
-                let path = expand(join(xs[:n] + [(a:target)], '/'))
+                let path = expand(join(xs[:n] + [(filename)], '/'))
                 if filereadable(path)
-                    return [path]
+                    return [path . ':' . join(linenum, ':')]
                 endif
             endfor
         endfor
